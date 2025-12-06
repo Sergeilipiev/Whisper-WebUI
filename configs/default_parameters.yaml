@@ -44,8 +44,8 @@ whisper:
   word_timestamps: false
 
   # Пунктуация
-  prepend_punctuations: "\"'"¿([{-"
-  append_punctuations: "\"'.。,，!！?？:：")]}、"
+  prepend_punctuations: "\"'\"¿([{-"
+  append_punctuations: "\"'.。,，!！?？:：\")]}、"
 
   max_new_tokens: null
 
