@@ -3,6 +3,11 @@ import argparse
 import gradio as gr
 from gradio_i18n import Translate, gettext as _
 import yaml
+import torch
+
+# Fix for PyTorch 2.6+ compatibility with pyannote diarization models
+# https://github.com/pyannote/pyannote-audio/issues/1813
+torch.serialization.add_safe_globals([torch.torch_version.TorchVersion])
 
 from modules.utils.paths import (FASTER_WHISPER_MODELS_DIR, DIARIZATION_MODELS_DIR, OUTPUT_DIR, WHISPER_MODELS_DIR,
                                  INSANELY_FAST_WHISPER_MODELS_DIR, NLLB_MODELS_DIR, DEFAULT_PARAMETERS_CONFIG_PATH,
