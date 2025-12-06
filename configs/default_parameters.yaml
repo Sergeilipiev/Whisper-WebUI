@@ -1,50 +1,91 @@
+# ====================================================================
+# WHISPER-WEBUI OPTIMAL PARAMETERS
+# ====================================================================
+# Оптимизировано для:
+# - Русский язык (podlodka-turbo модель)
+# - RTX 3080 (10GB VRAM)
+# - Минимизация галлюцинаций
+# - Баланс скорости и качества
+# ====================================================================
+
 whisper:
+  # Модель: podlodka-turbo - лучшая для русского языка
   model_size: "juasker/whisper-ct2-podlodka-turbo"
   file_format: "SRT"
-  lang: "Automatic Detection"
+  lang: "Russian"  # Явно указываем русский для лучшего качества
   is_translate: false
-  beam_size: 5
+
+  # Параметры декодирования (оптимизировано для минимума галлюцинаций)
+  beam_size: 1          # beam_size=1 = минимум галлюцинаций (исследования показывают)
   log_prob_threshold: -1
   no_speech_threshold: 0.6
-  best_of: 5
+  best_of: 1            # Для beam_size=1 best_of тоже должен быть 1
   patience: 1
-  condition_on_previous_text: true
+
+  # condition_on_previous_text=false уменьшает повторяющиеся галлюцинации
+  condition_on_previous_text: false
   prompt_reset_on_temperature: 0.5
   initial_prompt: null
-  temperature: 0
+  temperature: 0        # temperature=0 = детерминированный вывод
+
   compression_ratio_threshold: 2.4
   chunk_length: 30
-  batch_size: 24
+  batch_size: 24        # Оптимально для RTX 3080 10GB
+
+  # Штрафы за повторения
   length_penalty: 1
-  repetition_penalty: 1
-  no_repeat_ngram_size: 0
+  repetition_penalty: 1.1  # Небольшой штраф за повторения
+  no_repeat_ngram_size: 3  # Запрет повторения 3-грамм
+
   prefix: null
   suppress_blank: true
   suppress_tokens: "[-1]"
   max_initial_timestamp: 1
   word_timestamps: false
-  prepend_punctuations: "\"'“¿([{-"
-  append_punctuations: "\"'.。,，!！?？:：”)]}、"
+
+  # Пунктуация
+  prepend_punctuations: "\"'"¿([{-"
+  append_punctuations: "\"'.。,，!！?？:：")]}、"
+
   max_new_tokens: null
-  hallucination_silence_threshold: null
+
+  # Порог тишины для детекции галлюцинаций (секунды)
+  # Если модель генерирует текст во время тишины > порога - это галлюцинация
+  hallucination_silence_threshold: 2.0
+
   hotwords: null
   language_detection_threshold: 0.5
   language_detection_segments: 1
   add_timestamp: false
   enable_offload: true
 
+# ====================================================================
+# VAD (Voice Activity Detection) - Silero VAD
+# ====================================================================
+# РЕКОМЕНДУЕТСЯ ВКЛЮЧИТЬ для уменьшения галлюцинаций
+# VAD удаляет тишину из аудио перед транскрипцией
+
 vad:
-  vad_filter: false
-  threshold: 0.5
-  min_speech_duration_ms: 250
-  max_speech_duration_s: 9999
-  min_silence_duration_ms: 1000
-  speech_pad_ms: 2000
+  vad_filter: true      # ВКЛЮЧЕНО - значительно уменьшает галлюцинации
+  threshold: 0.5        # Порог детекции речи (0-1)
+  min_speech_duration_ms: 250    # Мин. длительность речи
+  max_speech_duration_s: 9999    # Макс. длительность сегмента
+  min_silence_duration_ms: 500   # Мин. пауза для разделения (уменьшено для лучшего разбиения)
+  speech_pad_ms: 400    # Отступ вокруг речи (уменьшено для точности)
+
+# ====================================================================
+# DIARIZATION (Разделение по спикерам)
+# ====================================================================
+# Требует HF_TOKEN с доступом к pyannote модели
 
 diarization:
-  is_diarize: false
-  hf_token: ""
+  is_diarize: false     # Включать по необходимости
+  hf_token: ""          # Токен из переменных окружения HF_TOKEN
   enable_offload: true
+
+# ====================================================================
+# BGM SEPARATION (Удаление фоновой музыки)
+# ====================================================================
 
 bgm_separation:
   is_separate_bgm: false
@@ -52,6 +93,10 @@ bgm_separation:
   segment_size: 256
   save_file: false
   enable_offload: true
+
+# ====================================================================
+# TRANSLATION (Перевод субтитров)
+# ====================================================================
 
 translation:
   deepl:
