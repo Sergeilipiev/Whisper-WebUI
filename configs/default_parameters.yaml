@@ -12,7 +12,7 @@ whisper:
   # Модель: podlodka-turbo - лучшая для русского языка
   model_size: "juasker/whisper-ct2-podlodka-turbo"
   file_format: "SRT"
-  lang: "Russian"  # Явно указываем русский для лучшего качества
+  lang: "russian"  # Явно указываем русский для лучшего качества
   is_translate: false
 
   # Параметры декодирования (оптимизировано для минимума галлюцинаций)
