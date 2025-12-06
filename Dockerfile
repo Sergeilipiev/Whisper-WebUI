@@ -62,7 +62,6 @@ RUN mkdir -p /Whisper-WebUI/models \
 # Volumes
 VOLUME ["/Whisper-WebUI/models"]
 VOLUME ["/Whisper-WebUI/outputs"]
-VOLUME ["/Whisper-WebUI/configs"]
 
 # Environment
 ENV PATH="/Whisper-WebUI/venv/bin:$PATH"

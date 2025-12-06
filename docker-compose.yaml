@@ -61,7 +61,6 @@ services:
     volumes:
       - whisper-models:/Whisper-WebUI/models
       - whisper-outputs:/Whisper-WebUI/outputs
-      - whisper-configs:/Whisper-WebUI/configs
 
     healthcheck:
       test:
@@ -93,5 +92,3 @@ volumes:
     name: whisper-webui-models
   whisper-outputs:
     name: whisper-webui-outputs
-  whisper-configs:
-    name: whisper-webui-configs
