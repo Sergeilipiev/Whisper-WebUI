@@ -14,8 +14,8 @@
 services:
   whisper-webui:
     build:
-      context: ..
-      dockerfile: coolify/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: whisper-webui
     restart: unless-stopped
 

@@ -1,32 +1,97 @@
+# ====================================================================
+# WHISPER-WEBUI - COOLIFY DEPLOYMENT
+# ====================================================================
+# GPU: NVIDIA RTX 3080 (10GB VRAM)
+# Оптимизирован для русского языка
+#
+# Деплой через Coolify:
+# 1. Создать новое приложение из GitHub репозитория
+# 2. Указать ветку: dev
+# 3. Build Pack: Docker Compose
+# 4. Добавить переменные окружения (HF_TOKEN)
+# ====================================================================
+
 services:
   whisper-webui:
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: whisper-webui
-    build: .
-    image: jhj0517/whisper-webui:latest
+    restart: unless-stopped
 
-    volumes:
-      # You can mount the container's volume paths to directory paths on your local machine.
-      # Models will be stored in the `./models' directory on your machine.
-      # Similarly, all output files will be stored in the `./outputs` directory.
-      - ./models:/Whisper-WebUI/models
-      - ./outputs:/Whisper-WebUI/outputs
-      - ./configs:/Whisper-WebUI/configs
-
-    ports:
-      - "7860:7860"
-
-    stdin_open: true
-    tty: true
-
-    entrypoint: ["python", "app.py", "--server_port", "7860", "--server_name", "0.0.0.0",]
-
-    # If you're not using nvidia GPU, Update device to match yours.
-    # See more info at : https://docs.docker.com/compose/compose-file/deploy/#driver
-    # You can remove the entire `deploy' section if you are using CPU.
+    # ==========================================
+    # GPU: RTX 3080 (GPU 0)
+    # ==========================================
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all
-              capabilities: [ gpu ]
+              device_ids:
+                - '0'
+              capabilities:
+                - gpu
+        limits:
+          memory: 16G
+
+    # Shared memory для PyTorch
+    shm_size: 4gb
+
+    environment:
+      # GPU Configuration
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-0}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+      # HuggingFace (для pyannote diarization)
+      - HF_TOKEN=${HF_TOKEN}
+      - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
+      - HF_HOME=/Whisper-WebUI/models
+      - TRANSFORMERS_CACHE=/Whisper-WebUI/models
+
+      # CUDA Memory Management
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+
+      # Timezone
+      - TZ=${TZ:-Europe/Moscow}
+
+    ports:
+      - '7860:7860'
+
+    volumes:
+      - whisper-models:/Whisper-WebUI/models
+      - whisper-outputs:/Whisper-WebUI/outputs
+      - whisper-configs:/Whisper-WebUI/configs
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'curl -sf http://localhost:7860/ || exit 1'
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 300s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+    entrypoint:
+      - python
+      - app.py
+      - --server_port
+      - "7860"
+      - --server_name
+      - "0.0.0.0"
+      - --whisper_type
+      - "faster-whisper"
+
+volumes:
+  whisper-models:
+    name: whisper-webui-models
+  whisper-outputs:
+    name: whisper-webui-outputs
+  whisper-configs:
+    name: whisper-webui-configs
